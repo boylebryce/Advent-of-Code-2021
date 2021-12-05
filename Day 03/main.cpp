@@ -5,6 +5,21 @@
 
 using namespace std;
 
+int boolArrayToInt(bool* input, int columns) {
+    int output = 0;
+    int exponent = columns - 1;
+
+    for(int i = 0; i < columns; i++) {
+        if(input[i]) {
+            output += pow(2, exponent);
+        }
+
+        exponent--;
+    }
+
+    return output;
+}
+
 int main() {
 /* Parse input file to array of strings */
     ifstream inputFile;
@@ -23,11 +38,12 @@ int main() {
     int columns = input[0].length();
     
     // Array of pointers to arrays of bool to create dynamic 2D array
-    bool** bitArrays = new bool*[input.size()];
+    vector<bool*> bitArrays;
+    // = new bool*[input.size()];
 
     // Create arrays of bool
     for (int i = 0; i < input.size(); i++) {
-        bitArrays[i] = new bool[columns];
+        bitArrays.push_back(new bool[columns]);
 
         // Initialize bools
         for (int j = 0; j < columns; j++) {
@@ -36,8 +52,8 @@ int main() {
     }
 
 /* Construct gamma and epsilon bit arrays */
-    vector<bool> gamma;
-    vector<bool> epsilon;
+    bool* gamma = new bool[columns];
+    bool* epsilon = new bool[columns];
 
     // Iterate over columns
     for(int i = 0; i < columns; i++) {
@@ -54,27 +70,93 @@ int main() {
             }
         }
 
-        gamma.push_back(ones > zeros);
-        epsilon.push_back(!gamma.back());
+        gamma[i] = ones > zeros;
+        epsilon[i] = !gamma[i];
     }
 
 /* Convert bit arrays to decimal values */
-    int gammaValue = 0;
-    int epsilonValue = 0;
-    int exponent = columns - 1;
+    int gammaValue = boolArrayToInt(gamma, columns);
+    int epsilonValue = boolArrayToInt(epsilon, columns);
 
+/* Part one output */
+    cout << gammaValue * epsilonValue << endl;
+
+/* Part two */
+    bool includeFlag;
+
+/* Oxygen */
+    vector<bool*> oxygenBitArrays = bitArrays;
+
+    // Iterate over columns
     for(int i = 0; i < columns; i++) {
-        if(gamma[i]) {
-            gammaValue += pow(2, exponent);
+        int ones = 0;
+        int zeros = 0;
+        vector<int> eraseIndices;
+
+        // Iterate over rows to count 0s and 1s
+        for (int j = 0; j < oxygenBitArrays.size(); j++) {
+            if(oxygenBitArrays[j][i]) {
+                ones++;
+            }
+            else {
+                zeros++;
+            }
         }
 
-        if(epsilon[i]) {
-            epsilonValue += pow(2, exponent);
+        includeFlag = ones >= zeros;
+
+        // Get row indices to erase
+        for (int j = 0; j < oxygenBitArrays.size(); j++) {
+            if(!(oxygenBitArrays[j][i] == includeFlag)) {
+                eraseIndices.push_back(j);
+            }
         }
 
-        exponent--;
+        // Erase rows
+        for (int j = 0; j < eraseIndices.size(); j++) {
+            oxygenBitArrays.erase(oxygenBitArrays.begin() + (eraseIndices[j] - j));
+        }
     }
 
-/* Output */
-    cout << gammaValue * epsilonValue << endl;
+/* CO2 scrubber */
+    vector<bool*> scrubberBitArrays = bitArrays;
+
+    // Iterate over columns
+    for(int i = 0; i < columns; i++) {
+        int ones = 0;
+        int zeros = 0;
+        vector<int> eraseIndices;
+
+        // Iterate over rows to count 0s and 1s
+        for (int j = 0; j < scrubberBitArrays.size(); j++) {
+            if(scrubberBitArrays[j][i]) {
+                ones++;
+            }
+            else {
+                zeros++;
+            }
+        }
+
+        includeFlag = ones < zeros;
+
+        // Get row indices to erase
+        for (int j = 0; j < scrubberBitArrays.size(); j++) {
+            if(!(scrubberBitArrays[j][i] == includeFlag)) {
+                eraseIndices.push_back(j);
+            }
+        }
+
+        // Erase rows
+        for (int j = 0; j < eraseIndices.size(); j++) {
+            scrubberBitArrays.erase(scrubberBitArrays.begin() + (eraseIndices[j] - j));
+        }
+    }
+
+    int oxygenValue = boolArrayToInt(oxygenBitArrays[0], columns);
+    int scrubberValue = boolArrayToInt(scrubberBitArrays[0], columns);
+
+    cout << "Oxygen generator: " << oxygenValue << endl;
+    cout << "CO2 scrubber: " << scrubberValue << endl;
+    cout << "Life support rating: " << oxygenValue * scrubberValue << endl;
+
 }
