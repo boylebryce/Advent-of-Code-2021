@@ -6,6 +6,7 @@ class BingoBoardSpot:
 class BingoBoard:
     def __init__(self, values):
         self.spots = []
+        self.bingo = False
 
         for row in values:
             temp = []
@@ -34,22 +35,28 @@ class BingoBoard:
 
         # Check row of latest draw for bingo
         if all([spot.marked for spot in self.spots[row]]):
-            return True
+            self.bingo = True
 
         # Check col of latest draw for bingo
         if all([i[col].marked for i in self.spots]):
-            return True
+            self.bingo = True
 
-        # No bingo in row or col of new draw
-        return False
+        return self.bingo
 
     def print_board(self):
+        formatted_board = []
         for row in self.spots:
+            formatted_row = []
             for spot in row:
-                marked = ' '
                 if spot.marked:
-                    marked = '_'
-                print("{}{} ".format(spot.value, marked))
+                    formatted_row.append(spot.value + '_')
+                else:
+                    formatted_row.append(spot.value + ' ')
+            formatted_board.append(formatted_row)
+        
+        for row in formatted_board:
+            print(row)
+                
 
 def main():
     input_file = open('boards.txt', 'r')
@@ -85,22 +92,30 @@ def main():
 
     # Parse draw file
     draws = draw_file_lines[0].strip().split(',')
-
     draws_so_far = []
 
     # Iterate over draws until bingo found
     for draw in draws:
         draws_so_far.append(draw)
+        remove_boards = []
 
         for board in boards:
             if board.has_bingo(draws_so_far):
-                sum = 0
-                for row in board.spots:
-                    for spot in row:
-                        if not spot.marked:
-                            sum += int(spot.value)
-                
-                print(sum * int(draw))
-                return
+                if len(boards) == 1:
+                    sum = 0
+                    for row in boards[0].spots:
+                        for spot in row:
+                            if not spot.marked:
+                                sum += int(spot.value)
+                    
+                    print(sum * int(draw))
+                    return
+                else:
+                    remove_boards.append(board)
+
+        # Remove boards that already have bingo until one board is left
+        if remove_boards:
+            for board in remove_boards:
+                boards.remove(board)
 
 main()
