@@ -61,8 +61,6 @@ for vent_line in vent_lines:
         while col <= end:
             vent_map[row][col] += 1
             col += 1
-    elif vent_line.is_diagonal:
-        
 
 points = 0
 
